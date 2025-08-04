@@ -3,9 +3,9 @@ import SwiftData
 
 // MARK: - Modèles SwiftData
 
-/// Modèle pour un enfant
+/// Modèle pour un utilisateur
 @Model
-final class Child {
+final class User {
     var firstName: String
     var level: String
     var createdAt: Date
@@ -52,7 +52,7 @@ final class Score {
     var maxScore: Int
     var completedAt: Date
     var elapsedTime: TimeInterval
-    var child: Child?
+    var user: User?
     var exercise: Exercise?
 
     init(score: Int, maxScore: Int, elapsedTime: TimeInterval, completedAt: Date = Date()) {
@@ -65,7 +65,7 @@ final class Score {
 
 // MARK: - Extensions utilitaires
 
-extension Child {
+extension User {
     var displayName: String {
         firstName
     }

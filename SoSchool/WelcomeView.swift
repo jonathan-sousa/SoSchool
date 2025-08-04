@@ -8,16 +8,16 @@
 import SwiftUI
 import SwiftData
 
-/// Vue d'accueil pour demander le prénom de l'enfant
+/// Vue d'accueil pour demander le prénom de l'utilisateur
 struct WelcomeView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var children: [Child]
+    @Query private var users: [User]
 
     @State private var firstName = ""
     @State private var isEditing = false
     @State private var showExerciseSelection = false
     @State private var showProfileSheet = false
-    @State private var currentChild: Child?
+    @State private var currentUser: User?
 
     var body: some View {
         NavigationView {
@@ -66,7 +66,7 @@ struct WelcomeView: View {
 
                     // Bouton toujours présent mais invisible si pas de prénom
                     Button(action: {
-                        saveChild()
+                        saveUser()
                         showExerciseSelection = true
                     }) {
                         Text("Commencer les exercices")
@@ -127,7 +127,7 @@ struct WelcomeView: View {
                         HStack(spacing: 5) {
                             Image(systemName: "person.circle.fill")
                                 .font(.title2)
-                            Text(currentChild?.firstName ?? "Profil")
+                            Text(currentUser?.firstName ?? "Profil")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                         }
@@ -139,39 +139,39 @@ struct WelcomeView: View {
                 ExerciseSelectionView()
             }
             .sheet(isPresented: $showProfileSheet) {
-                ProfileView(currentChild: $currentChild, firstName: $firstName)
+                                        ProfileView(currentUser: $currentUser, firstName: $firstName)
             }
             .onAppear {
-                loadCurrentChild()
+                loadCurrentUser()
             }
         }
     }
 
-    /// Charger l'enfant actuel depuis SwiftData
-    private func loadCurrentChild() {
-        if let existingChild = children.first {
-            currentChild = existingChild
-            firstName = existingChild.firstName
+    /// Charger l'utilisateur actuel depuis SwiftData
+    private func loadCurrentUser() {
+        if let existingUser = users.first {
+            currentUser = existingUser
+            firstName = existingUser.firstName
         }
     }
 
-    /// Sauvegarder l'enfant dans SwiftData
-    private func saveChild() {
-        if let existingChild = children.first {
-            // Mettre à jour l'enfant existant
-            existingChild.firstName = firstName
-            currentChild = existingChild
+    /// Sauvegarder l'utilisateur dans SwiftData
+    private func saveUser() {
+        if let existingUser = users.first {
+            // Mettre à jour l'utilisateur existant
+            existingUser.firstName = firstName
+            currentUser = existingUser
         } else {
-            // Créer un nouvel enfant
-            let child = Child(firstName: firstName, level: Level.beginner.rawValue)
-            modelContext.insert(child)
-            currentChild = child
+            // Créer un nouvel utilisateur
+            let user = User(firstName: firstName, level: Level.beginner.rawValue)
+            modelContext.insert(user)
+            currentUser = user
         }
 
         do {
             try modelContext.save()
         } catch {
-            print("Erreur lors de la sauvegarde de l'enfant : \(error)")
+            print("Erreur lors de la sauvegarde de l'utilisateur : \(error)")
         }
     }
 }

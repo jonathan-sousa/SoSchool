@@ -14,7 +14,7 @@ struct SoSchoolApp: App {
 
     init() {
         do {
-            modelContainer = try ModelContainer(for: Child.self, Exercise.self, Score.self)
+            modelContainer = try ModelContainer(for: User.self, Exercise.self, Score.self)
             print("Application SoSchool démarrée")
         } catch {
             fatalError("Impossible de créer le ModelContainer: \(error)")

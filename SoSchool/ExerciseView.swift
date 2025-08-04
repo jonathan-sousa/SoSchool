@@ -21,7 +21,7 @@ struct ExerciseView: View {
     @State private var currentIndex = 0
     @State private var showResult = false
     @State private var isLoading = true
-    @State private var currentChild: Child?
+    @State private var currentUser: User?
     @State private var scoreManager = ScoreManager()
     @State private var bestScore: (score: Int, maxScore: Int, time: TimeInterval)?
     @State private var isNewRecord = false
@@ -143,7 +143,7 @@ struct ExerciseView: View {
         }
         .onAppear {
             loadExercises()
-            loadCurrentChild()
+            loadCurrentUser()
             loadBestScore()
             startExercise()
         }
@@ -188,24 +188,24 @@ struct ExerciseView: View {
         }
     }
 
-    /// Charger l'enfant actuel depuis SwiftData
-    private func loadCurrentChild() {
-        // Récupérer le premier enfant disponible
-        let fetchDescriptor = FetchDescriptor<Child>()
+    /// Charger l'utilisateur actuel depuis SwiftData
+    private func loadCurrentUser() {
+        // Récupérer le premier utilisateur disponible
+        let fetchDescriptor = FetchDescriptor<User>()
 
         do {
-            let children = try modelContext.fetch(fetchDescriptor)
-            currentChild = children.first
-            print("👶 Enfant chargé : \(currentChild?.firstName ?? "Aucun")")
+            let users = try modelContext.fetch(fetchDescriptor)
+            currentUser = users.first
+            print("👤 Utilisateur chargé : \(currentUser?.firstName ?? "Aucun")")
         } catch {
-            print("❌ Erreur lors du chargement de l'enfant : \(error)")
+            print("❌ Erreur lors du chargement de l'utilisateur : \(error)")
         }
     }
 
-    /// Charger le meilleur score pour l'enfant actuel
+    /// Charger le meilleur score pour l'utilisateur actuel
     private func loadBestScore() {
-        guard let child = currentChild else { return }
-        bestScore = scoreManager.getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level, child: child)
+        guard let user = currentUser else { return }
+        bestScore = scoreManager.getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level, user: user)
     }
 
     /// Démarrer l'exercice
@@ -218,18 +218,18 @@ struct ExerciseView: View {
     /// Sauvegarder le score
     @MainActor
     private func saveScore() {
-        guard let child = currentChild else {
-            print("❌ Erreur : Aucun enfant trouvé")
+        guard let user = currentUser else {
+            print("❌ Erreur : Aucun utilisateur trouvé")
             return
         }
 
-        print("💾 Début de la sauvegarde du score pour \(child.firstName)")
+        print("💾 Début de la sauvegarde du score pour \(user.firstName)")
 
-        // Vérifier si c'est un nouveau record pour cet enfant
-        isNewRecord = scoreManager.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level, child: child)
+        // Vérifier si c'est un nouveau record pour cet utilisateur
+        isNewRecord = scoreManager.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level, user: user)
 
         // Sauvegarder le score
-                    scoreManager.saveScore(modelContext: modelContext, child: child, exerciseType: exerciseType, level: level)
+        scoreManager.saveScore(modelContext: modelContext, user: user, exerciseType: exerciseType, level: level)
 
         // Les données SwiftData se mettent à jour automatiquement
     }

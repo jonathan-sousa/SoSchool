@@ -13,12 +13,12 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @Binding var currentChild: Child?
+    @Binding var currentUser: User?
     @Binding var firstName: String
 
     @State private var newFirstName = ""
     @State private var showDeleteAlert = false
-    @State private var children: [Child] = []
+    @State private var users: [User] = []
 
     var body: some View {
         NavigationView {
@@ -36,7 +36,7 @@ struct ProfileView: View {
                 }
 
                 // Profil actuel
-                if let currentChild = currentChild {
+                if let currentUser = currentUser {
                     VStack(spacing: 15) {
                         Text("Profil actuel")
                             .font(.headline)
@@ -45,7 +45,7 @@ struct ProfileView: View {
                         HStack {
                             Image(systemName: "person.fill")
                                 .foregroundColor(.blue)
-                            Text(currentChild.firstName)
+                            Text(currentUser.firstName)
                                 .font(.title3)
                                 .fontWeight(.semibold)
                             Spacer()
@@ -77,7 +77,7 @@ struct ProfileView: View {
                         .textContentType(.name)
 
                     Button(action: {
-                        updateChildName()
+                        updateUserName()
                     }) {
                         Text("Sauvegarder")
                             .font(.headline)
@@ -135,7 +135,7 @@ struct ProfileView: View {
             .alert("Supprimer le profil", isPresented: $showDeleteAlert) {
                 Button("Annuler", role: .cancel) { }
                 Button("Supprimer", role: .destructive) {
-                    deleteCurrentChild()
+                    deleteCurrentUser()
                 }
             } message: {
                 Text("Êtes-vous sûr de vouloir supprimer ce profil ? Cette action ne peut pas être annulée.")
@@ -143,18 +143,18 @@ struct ProfileView: View {
         }
     }
 
-    /// Mettre à jour le nom de l'enfant
-    private func updateChildName() {
+    /// Mettre à jour le nom de l'utilisateur
+    private func updateUserName() {
         guard !newFirstName.isEmpty else { return }
 
-        if let currentChild = currentChild {
-            currentChild.firstName = newFirstName
+        if let currentUser = currentUser {
+            currentUser.firstName = newFirstName
             firstName = newFirstName
         } else {
-            // Créer un nouvel enfant
-            let child = Child(firstName: newFirstName, level: Level.beginner.rawValue)
-            modelContext.insert(child)
-            currentChild = child
+            // Créer un nouvel utilisateur
+            let user = User(firstName: newFirstName, level: Level.beginner.rawValue)
+            modelContext.insert(user)
+            currentUser = user
             firstName = newFirstName
         }
 
@@ -166,14 +166,14 @@ struct ProfileView: View {
         }
     }
 
-    /// Supprimer l'enfant actuel
-    private func deleteCurrentChild() {
-        if let currentChild = currentChild {
-            modelContext.delete(currentChild)
+    /// Supprimer l'utilisateur actuel
+    private func deleteCurrentUser() {
+        if let currentUser = currentUser {
+            modelContext.delete(currentUser)
 
             do {
                 try modelContext.save()
-                self.currentChild = nil
+                self.currentUser = nil
                 firstName = ""
                 newFirstName = ""
                 dismiss()
@@ -185,5 +185,5 @@ struct ProfileView: View {
 }
 
 #Preview {
-    ProfileView(currentChild: .constant(nil), firstName: .constant(""))
+    ProfileView(currentUser: .constant(nil), firstName: .constant(""))
 }

@@ -2,7 +2,7 @@
 
 ## 📱 Description
 
-Application SwiftUI moderne pour l'apprentissage de la conjugaison française. Utilise SwiftData pour la persistance des données et propose des exercices interactifs pour les enfants.
+Application SwiftUI moderne pour l'apprentissage de la conjugaison française. Utilise SwiftData pour la persistance des données et propose des exercices interactifs pour les utilisateurs.
 
 ## 🏗️ Architecture
 
@@ -14,7 +14,7 @@ Application SwiftUI moderne pour l'apprentissage de la conjugaison française. U
 ## 🚀 Fonctionnalités
 
 - ✅ **Exercices de conjugaison** : QCM interactifs
-- ✅ **Gestion des enfants** : Profils personnalisés
+- ✅ **Gestion des utilisateurs** : Profils personnalisés
 - ✅ **Système de scores** : Records et progression
 - ✅ **Niveaux d'apprentissage** : Débutant, Intermédiaire, Avancé
 - ✅ **Interface adaptative** : iPhone et iPad
@@ -63,9 +63,9 @@ SoSchool/
 
 L'application utilise SwiftData avec trois modèles principaux :
 
-### Child (Enfant)
+### User (Utilisateur)
 
-- **firstName** : Prénom de l'enfant
+- **firstName** : Prénom de l'utilisateur
 - **level** : Niveau d'apprentissage
 - **createdAt** : Date de création
 - **scores** : Relation vers les scores
@@ -86,7 +86,7 @@ L'application utilise SwiftData avec trois modèles principaux :
 - **maxScore** : Score maximum possible
 - **elapsedTime** : Temps écoulé
 - **completedAt** : Date de completion
-- **child** : Relation vers l'enfant
+- **user** : Relation vers l'utilisateur
 - **exercise** : Relation vers l'exercice
 
 ## 🧪 Tests
