@@ -202,9 +202,10 @@ struct ExerciseView: View {
         }
     }
 
-    /// Charger le meilleur score
+    /// Charger le meilleur score pour l'enfant actuel
     private func loadBestScore() {
-                    bestScore = scoreManager.getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level)
+        guard let child = currentChild else { return }
+        bestScore = scoreManager.getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level, child: child)
     }
 
     /// Démarrer l'exercice
@@ -224,8 +225,8 @@ struct ExerciseView: View {
 
         print("💾 Début de la sauvegarde du score pour \(child.firstName)")
 
-        // Vérifier si c'est un nouveau record
-                    isNewRecord = scoreManager.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level)
+        // Vérifier si c'est un nouveau record pour cet enfant
+        isNewRecord = scoreManager.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level, child: child)
 
         // Sauvegarder le score
                     scoreManager.saveScore(modelContext: modelContext, child: child, exerciseType: exerciseType, level: level)

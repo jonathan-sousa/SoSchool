@@ -63,14 +63,14 @@ class ScoreManager {
         print("💾 Enfant: \(child.firstName)")
         print("📊 Score réel obtenu : \(currentScore)/\(maxScore)")
 
-        // Vérifier si c'est un nouveau record
-        let isNewRecord = self.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level)
+        // Vérifier si c'est un nouveau record pour cet enfant
+        let isNewRecord = self.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level, child: child)
 
         if isNewRecord {
             print("🏆 Nouveau record détecté !")
 
-            // Supprimer l'ancien record s'il existe
-            deleteOldScore(modelContext: modelContext, exerciseType: exerciseType, level: level)
+            // Supprimer l'ancien record pour cet enfant s'il existe
+            deleteOldScore(modelContext: modelContext, exerciseType: exerciseType, level: level, child: child)
 
             // Créer le nouveau record
             createNewScore(modelContext: modelContext, child: child, exerciseType: exerciseType, level: level, score: currentScore)
@@ -111,8 +111,8 @@ class ScoreManager {
         }
     }
 
-    /// Récupérer le meilleur score pour un exercice et niveau
-    func getBestScore(modelContext: ModelContext, exerciseType: ExerciseType, level: Level) -> (score: Int, maxScore: Int, time: TimeInterval)? {
+    /// Récupérer le meilleur score pour un exercice, niveau et enfant spécifiques
+    func getBestScore(modelContext: ModelContext, exerciseType: ExerciseType, level: Level, child: Child) -> (score: Int, maxScore: Int, time: TimeInterval)? {
         // Debug: Vérifier tous les scores dans la base
         let allScoresDescriptor = FetchDescriptor<Score>()
 
@@ -135,9 +135,11 @@ class ScoreManager {
         do {
             let allScores = try modelContext.fetch(fetchDescriptor)
 
-            // Filtrer manuellement par type et niveau
+            // Filtrer manuellement par type, niveau et enfant
             let filteredScores = allScores.filter { score in
-                score.exercise?.type == exerciseType.rawValue && score.exercise?.level == level.rawValue
+                score.exercise?.type == exerciseType.rawValue && 
+                score.exercise?.level == level.rawValue &&
+                score.child?.firstName == child.firstName
             }
 
             print("🔍 Recherche de records pour \(exerciseType.displayName) - \(level.displayName)")
@@ -155,10 +157,10 @@ class ScoreManager {
         return nil
     }
 
-    /// Vérifier si le score actuel bat le record
-    func isNewRecord(modelContext: ModelContext, exerciseType: ExerciseType, level: Level) -> Bool {
-        guard let bestScore = getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level) else {
-            return true // Premier score
+    /// Vérifier si le score actuel bat le record pour cet enfant
+    func isNewRecord(modelContext: ModelContext, exerciseType: ExerciseType, level: Level, child: Child) -> Bool {
+        guard let bestScore = getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level, child: child) else {
+            return true // Premier score pour cet enfant
         }
 
         return currentScore > bestScore.score || (currentScore == bestScore.score && elapsedTime < bestScore.time)
@@ -209,8 +211,8 @@ class ScoreManager {
         return newExercise
     }
 
-    /// Supprimer l'ancien record
-    private func deleteOldScore(modelContext: ModelContext, exerciseType: ExerciseType, level: Level) {
+    /// Supprimer l'ancien record pour cet enfant
+    private func deleteOldScore(modelContext: ModelContext, exerciseType: ExerciseType, level: Level, child: Child) {
         print("🗑️ === DÉBUT SUPPRESSION ANCIEN RECORD ===")
 
         let fetchDescriptor = FetchDescriptor<Score>()
@@ -218,9 +220,11 @@ class ScoreManager {
         do {
             let allScores = try modelContext.fetch(fetchDescriptor)
 
-            // Filtrer par type et niveau
+            // Filtrer par type, niveau et enfant
             let scoresToDelete = allScores.filter { score in
-                score.exercise?.type == exerciseType.rawValue && score.exercise?.level == level.rawValue
+                score.exercise?.type == exerciseType.rawValue && 
+                score.exercise?.level == level.rawValue &&
+                score.child?.firstName == child.firstName
             }
 
             print("🗑️ Suppression de \(scoresToDelete.count) ancien(s) record(s)")
