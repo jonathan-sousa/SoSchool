@@ -75,8 +75,7 @@ class ScoreManager {
             // Créer le nouveau record
             createNewScore(modelContext: modelContext, user: user, exerciseType: exerciseType, level: level, score: currentScore)
         } else {
-            print("🏆 Premier record !")
-            createNewScore(modelContext: modelContext, user: user, exerciseType: exerciseType, level: level, score: currentScore)
+            print("❌ Score non sauvegardé (pas de nouveau record)")
         }
 
         print("💾 === FIN SAUVEGARDE SCORE SWIFTDATA ===")
@@ -129,7 +128,7 @@ class ScoreManager {
 
         // Chercher les records spécifiques pour ce type et niveau
         let fetchDescriptor = FetchDescriptor<Score>(
-            sortBy: [SortDescriptor(\.score, order: .reverse), SortDescriptor(\.completedAt, order: .forward)]
+            sortBy: [SortDescriptor(\.completedAt, order: .forward)]
         )
 
         do {
@@ -137,16 +136,49 @@ class ScoreManager {
 
             // Filtrer manuellement par type, niveau et utilisateur
             let filteredScores = allScores.filter { score in
-                score.exercise?.type == exerciseType.rawValue &&
-                score.exercise?.level == level.rawValue &&
-                score.user?.firstName == user.firstName
+                let matchesType = score.exercise?.type == exerciseType.rawValue
+                let matchesLevel = score.exercise?.level == level.rawValue
+                let matchesUser = score.user?.id == user.id
+
+                print("  - Score pour \(score.user?.firstName ?? "inconnu") : \(score.score)/\(score.maxScore)")
+                print("    Type: \(score.exercise?.type ?? "nil") == \(exerciseType.rawValue) ? \(matchesType)")
+                print("    Level: \(score.exercise?.level ?? "nil") == \(level.rawValue) ? \(matchesLevel)")
+                print("    User match: \(matchesUser)")
+
+                return matchesType && matchesLevel && matchesUser
             }
 
             print("🔍 Recherche de records pour \(exerciseType.displayName) - \(level.displayName)")
             print("🔍 Scores trouvés : \(filteredScores.count)")
+            print("🔄 DÉBUT DU TRI - \(filteredScores.count) scores à trier")
 
-            if let bestScore = filteredScores.first {
-                print("🏆 Record trouvé : \(bestScore.score)/\(bestScore.maxScore) en \(formatTime(bestScore.elapsedTime))")
+            // Trier par pourcentage de réussite (score/maxScore) décroissant, puis par temps croissant
+            let sortedScores = filteredScores.sorted { score1, score2 in
+                let percentage1 = Double(score1.score) / Double(score1.maxScore)
+                let percentage2 = Double(score2.score) / Double(score2.maxScore)
+
+                print("🔄 Tri : \(score1.score)/\(score1.maxScore) (\(String(format: "%.1f", percentage1 * 100))%) vs \(score2.score)/\(score2.maxScore) (\(String(format: "%.1f", percentage2 * 100))%)")
+
+                if percentage1 != percentage2 {
+                    let result = percentage1 > percentage2
+                    print("  → \(result ? "score1" : "score2") en premier")
+                    return result // Meilleur pourcentage en premier
+                } else {
+                    let result = score1.elapsedTime < score2.elapsedTime
+                    print("  → même pourcentage, \(result ? "score1" : "score2") en premier (temps)")
+                    return result // Temps plus court en premier
+                }
+            }
+
+            print("📊 Scores triés :")
+            for (index, score) in sortedScores.enumerated() {
+                let percentage = Double(score.score) / Double(score.maxScore) * 100
+                print("  \(index + 1). \(score.score)/\(score.maxScore) (\(String(format: "%.1f", percentage))%) en \(formatTime(score.elapsedTime))")
+            }
+
+            if let bestScore = sortedScores.first {
+                let percentage = Double(bestScore.score) / Double(bestScore.maxScore) * 100
+                print("🏆 Record trouvé : \(bestScore.score)/\(bestScore.maxScore) (\(String(format: "%.1f", percentage))%) en \(formatTime(bestScore.elapsedTime))")
                 return (score: bestScore.score, maxScore: bestScore.maxScore, time: bestScore.elapsedTime)
             } else {
                 print("❌ Aucun record trouvé")
@@ -163,7 +195,24 @@ class ScoreManager {
             return true // Premier score pour cet utilisateur
         }
 
-        return currentScore > bestScore.score || (currentScore == bestScore.score && elapsedTime < bestScore.time)
+        // Comparer les pourcentages de réussite
+        let currentPercentage = Double(currentScore) / Double(maxScore)
+        let bestPercentage = Double(bestScore.score) / Double(bestScore.maxScore)
+
+        print("🔍 Comparaison des scores :")
+        print("  - Score actuel : \(currentScore)/\(maxScore) (\(String(format: "%.1f", currentPercentage * 100))%)")
+        print("  - Meilleur score : \(bestScore.score)/\(bestScore.maxScore) (\(String(format: "%.1f", bestPercentage * 100))%)")
+
+        if currentPercentage > bestPercentage {
+            print("🏆 Nouveau record ! (meilleur pourcentage)")
+            return true
+        } else if currentPercentage == bestPercentage && elapsedTime < bestScore.time {
+            print("🏆 Nouveau record ! (même pourcentage mais temps plus court)")
+            return true
+        } else {
+            print("❌ Pas de nouveau record")
+            return false
+        }
     }
 
     /// Récupérer ou créer un exercice

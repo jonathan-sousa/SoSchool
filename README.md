@@ -66,7 +66,6 @@ L'application utilise SwiftData avec trois modèles principaux :
 ### User (Utilisateur)
 
 - **firstName** : Prénom de l'utilisateur
-- **level** : Niveau d'apprentissage
 - **createdAt** : Date de création
 - **scores** : Relation vers les scores
 

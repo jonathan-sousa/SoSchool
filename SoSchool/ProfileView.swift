@@ -13,12 +13,8 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @Binding var currentUser: User?
-    @Binding var firstName: String
-
     @State private var newFirstName = ""
     @State private var showDeleteAlert = false
-    @State private var users: [User] = []
 
     var body: some View {
         NavigationView {
@@ -35,79 +31,55 @@ struct ProfileView: View {
                         .foregroundColor(.primary)
                 }
 
-                // Profil actuel
-                if let currentUser = currentUser {
-                    VStack(spacing: 15) {
-                        Text("Profil actuel")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                // Message d'information
+                VStack(spacing: 15) {
+                    Text("Gestion des profils")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
 
+                    Text("Pour modifier ou supprimer un utilisateur, retourne à l'écran d'accueil et utilise les options disponibles.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(10)
+                }
+
+                // Informations sur l'application
+                VStack(spacing: 15) {
+                    Text("À propos")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+
+                    VStack(spacing: 10) {
                         HStack {
-                            Image(systemName: "person.fill")
+                            Image(systemName: "graduationcap.fill")
                                 .foregroundColor(.blue)
-                            Text(currentUser.firstName)
+                            Text("SoSchool")
                                 .font(.title3)
                                 .fontWeight(.semibold)
                             Spacer()
                         }
-                        .padding()
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(10)
-                    }
-                }
 
-                // Modifier le nom
-                VStack(spacing: 15) {
-                    Text("Modifier le nom")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-
-                    TextField("Nouveau prénom", text: $newFirstName)
-                        .font(.title3)
-                        .padding()
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(10)
-                        .onAppear {
-                            newFirstName = firstName
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.secondary)
+                            Text("Version 1.0.0")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
                         }
-                        .textFieldStyle(PlainTextFieldStyle())
-                        .keyboardType(.default)
-                        .autocorrectionDisabled(true)
-                        .textInputAutocapitalization(.words)
-                        .textContentType(.name)
-
-                    Button(action: {
-                        updateUserName()
-                    }) {
-                        Text("Sauvegarder")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(10)
                     }
-                    .disabled(newFirstName.isEmpty)
+                    .padding()
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(10)
                 }
 
                 Spacer()
 
-                // Boutons d'action
+                                // Bouton fermer
                 VStack(spacing: 15) {
-                    Button(action: {
-                        showDeleteAlert = true
-                    }) {
-                        Text("Supprimer le profil")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .padding()
-                            .background(Color.red)
-                            .cornerRadius(10)
-                    }
-
                     Button(action: {
                         dismiss()
                     }) {
@@ -143,47 +115,13 @@ struct ProfileView: View {
         }
     }
 
-    /// Mettre à jour le nom de l'utilisateur
-    private func updateUserName() {
-        guard !newFirstName.isEmpty else { return }
-
-        if let currentUser = currentUser {
-            currentUser.firstName = newFirstName
-            firstName = newFirstName
-        } else {
-            // Créer un nouvel utilisateur
-            let user = User(firstName: newFirstName, level: Level.beginner.rawValue)
-            modelContext.insert(user)
-            currentUser = user
-            firstName = newFirstName
-        }
-
-        do {
-            try modelContext.save()
-            dismiss()
-        } catch {
-            print("Erreur lors de la mise à jour : \(error)")
-        }
-    }
-
     /// Supprimer l'utilisateur actuel
     private func deleteCurrentUser() {
-        if let currentUser = currentUser {
-            modelContext.delete(currentUser)
-
-            do {
-                try modelContext.save()
-                self.currentUser = nil
-                firstName = ""
-                newFirstName = ""
-                dismiss()
-            } catch {
-                print("Erreur lors de la suppression : \(error)")
-            }
-        }
+        // Cette fonction n'est plus utilisée dans la nouvelle interface
+        dismiss()
     }
 }
 
 #Preview {
-    ProfileView(currentUser: .constant(nil), firstName: .constant(""))
+    ProfileView()
 }

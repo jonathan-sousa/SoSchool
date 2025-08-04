@@ -7,13 +7,11 @@ import SwiftData
 @Model
 final class User {
     var firstName: String
-    var level: String
     var createdAt: Date
     @Relationship(deleteRule: .cascade) var scores: [Score] = []
 
-    init(firstName: String, level: String = "débutant") {
+    init(firstName: String) {
         self.firstName = firstName
-        self.level = level
         self.createdAt = Date()
     }
 }

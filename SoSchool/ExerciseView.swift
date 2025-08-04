@@ -12,6 +12,7 @@ import SwiftData
 struct ExerciseView: View {
     let exerciseType: ExerciseType
     let level: Level
+    let currentUser: User
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -21,7 +22,6 @@ struct ExerciseView: View {
     @State private var currentIndex = 0
     @State private var showResult = false
     @State private var isLoading = true
-    @State private var currentUser: User?
     @State private var scoreManager = ScoreManager()
     @State private var bestScore: (score: Int, maxScore: Int, time: TimeInterval)?
     @State private var isNewRecord = false
@@ -188,24 +188,14 @@ struct ExerciseView: View {
         }
     }
 
-    /// Charger l'utilisateur actuel depuis SwiftData
+    /// Charger l'utilisateur actuel (maintenant passé en paramètre)
     private func loadCurrentUser() {
-        // Récupérer le premier utilisateur disponible
-        let fetchDescriptor = FetchDescriptor<User>()
-
-        do {
-            let users = try modelContext.fetch(fetchDescriptor)
-            currentUser = users.first
-            print("👤 Utilisateur chargé : \(currentUser?.firstName ?? "Aucun")")
-        } catch {
-            print("❌ Erreur lors du chargement de l'utilisateur : \(error)")
-        }
+        print("👤 Utilisateur chargé : \(currentUser.firstName)")
     }
 
     /// Charger le meilleur score pour l'utilisateur actuel
     private func loadBestScore() {
-        guard let user = currentUser else { return }
-        bestScore = scoreManager.getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level, user: user)
+        bestScore = scoreManager.getBestScore(modelContext: modelContext, exerciseType: exerciseType, level: level, user: currentUser)
     }
 
     /// Démarrer l'exercice
@@ -218,18 +208,13 @@ struct ExerciseView: View {
     /// Sauvegarder le score
     @MainActor
     private func saveScore() {
-        guard let user = currentUser else {
-            print("❌ Erreur : Aucun utilisateur trouvé")
-            return
-        }
-
-        print("💾 Début de la sauvegarde du score pour \(user.firstName)")
+        print("💾 Début de la sauvegarde du score pour \(currentUser.firstName)")
 
         // Vérifier si c'est un nouveau record pour cet utilisateur
-        isNewRecord = scoreManager.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level, user: user)
+        isNewRecord = scoreManager.isNewRecord(modelContext: modelContext, exerciseType: exerciseType, level: level, user: currentUser)
 
         // Sauvegarder le score
-        scoreManager.saveScore(modelContext: modelContext, user: user, exerciseType: exerciseType, level: level)
+        scoreManager.saveScore(modelContext: modelContext, user: currentUser, exerciseType: exerciseType, level: level)
 
         // Les données SwiftData se mettent à jour automatiquement
     }
@@ -509,5 +494,11 @@ struct ExerciseResultView: View {
 }
 
 #Preview {
-    ExerciseView(exerciseType: ExerciseType.qcm, level: Level.beginner)
+    // Créer un utilisateur de test pour la preview
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: User.self, Exercise.self, Score.self, configurations: config)
+    let testUser = User(firstName: "Test")
+
+    return ExerciseView(exerciseType: ExerciseType.qcm, level: Level.beginner, currentUser: testUser)
+        .modelContainer(container)
 }

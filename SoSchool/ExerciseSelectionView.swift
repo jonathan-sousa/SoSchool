@@ -10,6 +10,8 @@ import SwiftData
 
 /// Vue de sélection des exercices
 struct ExerciseSelectionView: View {
+    let currentUser: User
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -75,7 +77,7 @@ struct ExerciseSelectionView: View {
                 }
             }
             .sheet(isPresented: $showLevelSelection) {
-                LevelSelectionView(selectedExerciseType: selectedExerciseType)
+                LevelSelectionView(selectedExerciseType: selectedExerciseType, currentUser: currentUser)
             }
         }
     }
@@ -225,5 +227,11 @@ struct LevelCard: View {
 }
 
 #Preview {
-    ExerciseSelectionView()
+    // Créer un utilisateur de test pour la preview
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: User.self, Exercise.self, Score.self, configurations: config)
+    let testUser = User(firstName: "Test")
+
+    return ExerciseSelectionView(currentUser: testUser)
+        .modelContainer(container)
 }
