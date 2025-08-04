@@ -121,3 +121,6 @@ iOSInjectionProject/
 # Cursor IDE
 .cursor/
 .cursorrules
+
+# Scripts de développement local
+rebuild.sh
