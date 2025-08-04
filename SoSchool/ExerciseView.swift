@@ -154,8 +154,8 @@ struct ExerciseView: View {
         print("🔄 Début du chargement des exercices pour \(exerciseType.rawValue) - \(level.rawValue)")
 
         // Générer les exercices à la volée (pas de stockage en base)
-        print("📝 Génération de 5 exercices à la volée...")
-        exercises = ExerciseData.generateExercisesForLevel(level, exerciseType: exerciseType, count: 5)
+        print("📝 Génération de \(ExerciseData.exercisesPerSession) exercices à la volée...")
+        exercises = ExerciseData.generateExercisesForLevel(level, exerciseType: exerciseType, count: ExerciseData.exercisesPerSession)
 
         print("✅ \(exercises.count) exercices générés à la volée")
 

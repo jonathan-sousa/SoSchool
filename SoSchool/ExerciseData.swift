@@ -90,6 +90,11 @@ struct CoherentCombination {
 /// Gestionnaire des exercices
 struct ExerciseData {
 
+    // MARK: - Configuration
+
+    /// Nombre d'exercices par session (configurable)
+    static let exercisesPerSession = 20
+
     // MARK: - Matrice de données pour génération aléatoire
 
     /// Sujets disponibles avec leurs propriétés
@@ -321,11 +326,11 @@ struct ExerciseData {
     static func createDefaultExercises(modelContext: ModelContext, for level: Level, exerciseType: ExerciseType) {
         print("📝 Début de la création des exercices pour \(exerciseType.rawValue) - \(level.rawValue)")
 
-        // Créer 5 exercices QCM aléatoires pour le niveau spécifique
-        print("📚 Création de 5 exercices pour le niveau : \(level.rawValue)")
-        for i in 0..<5 {
+        // Créer des exercices QCM aléatoires pour le niveau spécifique
+        print("📚 Création de \(exercisesPerSession) exercices pour le niveau : \(level.rawValue)")
+        for i in 0..<exercisesPerSession {
             let exerciseData = generateRandomQCMExercise(level: level)
-            print("  - Exercice \(i+1)/5 : \(exerciseData.sentence)")
+            print("  - Exercice \(i+1)/\(exercisesPerSession) : \(exerciseData.sentence)")
 
             let exercise = Exercise(
                 id: exerciseData.id,
@@ -339,11 +344,11 @@ struct ExerciseData {
             )
             modelContext.insert(exercise)
         }
-        print("✅ 5 exercices créés pour le niveau \(level.rawValue)")
+        print("✅ \(exercisesPerSession) exercices créés pour le niveau \(level.rawValue)")
 
         do {
             try modelContext.save()
-            print("✅ 5 exercices QCM créés avec succès pour \(exerciseType.rawValue) - \(level.rawValue)")
+            print("✅ \(exercisesPerSession) exercices QCM créés avec succès pour \(exerciseType.rawValue) - \(level.rawValue)")
         } catch {
             print("❌ Erreur lors de la création des exercices : \(error)")
         }
