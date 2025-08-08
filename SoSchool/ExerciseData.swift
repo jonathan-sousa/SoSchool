@@ -438,7 +438,21 @@ struct ExerciseData {
         }
     }
 
-    /// Générer un exercice de niveau débutant (logique actuelle)
+    /// Générer un exercice de complétion selon le niveau
+    private static func generateRandomCompleteExercise(level: Level = .beginner) -> ExerciseDataModel {
+        switch level {
+        case .beginner:
+            return generateBeginnerCompleteExercise()
+        case .intermediate:
+            // Par défaut, utiliser la version débutant tant que non spécifié
+            return generateBeginnerCompleteExercise()
+        case .expert:
+            // Par défaut, utiliser la version débutant tant que non spécifié
+            return generateBeginnerCompleteExercise()
+        }
+    }
+
+    /// Générer un exercice de niveau débutant (QCM)
     private static func generateBeginnerExercise() -> ExerciseDataModel {
         let combination = generateRandomCombination()
         let options = generateRandomOptions(for: combination.verb, correctAnswer: combination.correctAnswer)
@@ -451,6 +465,21 @@ struct ExerciseData {
             sentence: combination.sentence,
             correctAnswer: combination.correctAnswer,
             options: options,
+            subject: combination.subject
+        )
+    }
+
+    /// Générer un exercice de niveau débutant (Compléter)
+    private static func generateBeginnerCompleteExercise() -> ExerciseDataModel {
+        let combination = generateRandomCombination()
+        return ExerciseDataModel(
+            id: "beginner_complete_\(combination.subject)_\(combination.verb.rawValue)_\(Date().timeIntervalSince1970)",
+            type: ExerciseType.complete.rawValue,
+            verb: combination.verb.rawValue,
+            level: Level.beginner.rawValue,
+            sentence: combination.sentence, // contient déjà ___
+            correctAnswer: combination.correctAnswer,
+            options: [],
             subject: combination.subject
         )
     }
@@ -787,7 +816,19 @@ struct ExerciseData {
         var generatedExercises: [ExerciseDataModel] = []
 
         for i in 0..<count {
-            let exerciseData = generateRandomQCMExercise(level: level)
+            let exerciseData: ExerciseDataModel
+            switch exerciseType {
+            case .qcm:
+                exerciseData = generateRandomQCMExercise(level: level)
+            case .complete:
+                exerciseData = generateRandomCompleteExercise(level: level)
+            case .match:
+                exerciseData = generateRandomQCMExercise(level: level) // placeholder
+            case .memory:
+                exerciseData = generateRandomQCMExercise(level: level) // placeholder
+            case .puzzle:
+                exerciseData = generateRandomQCMExercise(level: level) // placeholder
+            }
             print("  - Exercice \(i+1)/\(count) : \(exerciseData.sentence)")
             generatedExercises.append(exerciseData)
         }

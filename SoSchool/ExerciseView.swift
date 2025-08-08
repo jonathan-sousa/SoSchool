@@ -81,6 +81,7 @@ struct ExerciseView: View {
                         CompleteExerciseView(exercise: exercise) { isCorrect in
                             handleAnswer(isCorrect: isCorrect)
                         }
+                        .id("complete-\(currentIndex)-\(exercise.id)")
                     case .match:
                         MatchExerciseView(exercise: exercise) { isCorrect in
                             handleAnswer(isCorrect: isCorrect)
@@ -237,6 +238,7 @@ struct QCMExerciseView: View {
                     Text("Complète la phrase :")
                         .font(.title2)
                         .fontWeight(.semibold)
+                        .multilineTextAlignment(.center)
 
                     // Encart de phrase: 2 lignes max, taille fixe, troncature
                     Text(exercise.sentence)
@@ -275,31 +277,27 @@ struct QCMExerciseView: View {
                 }
                 .padding(.horizontal)
 
-                // Zone de feedback
-                VStack(spacing: 15) {
-                    if showFeedback {
-                        Button(action: {
-                            let wasCorrect = selectedAnswer == exercise.correctAnswer
-                            selectedAnswer = nil
-                            showFeedback = false
-                            isAnswered = false
-                            onAnswer(wasCorrect)
-                        }) {
-                            Text("Exercice suivant")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity, minHeight: 50)
-                                .padding()
-                                .background(Color.blue)
-                                .cornerRadius(10)
-                        }
-                        .padding(.top, 10)
-                    } else {
-                        Spacer().frame(height: 60)
+                Spacer(minLength: 0)
+
+                // Bouton en bas
+                if showFeedback {
+                    Button(action: {
+                        let wasCorrect = selectedAnswer == exercise.correctAnswer
+                        selectedAnswer = nil
+                        showFeedback = false
+                        isAnswered = false
+                        onAnswer(wasCorrect)
+                    }) {
+                        Text("Exercice suivant")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(10)
                     }
                 }
-                .frame(minHeight: 80)
             }
             .padding()
             .padding(.bottom, 20)
@@ -320,19 +318,141 @@ struct QCMExerciseView: View {
     }
 }
 
-/// Vue pour l'exercice de complétion (placeholder)
+/// Vue pour l'exercice de complétion
 struct CompleteExerciseView: View {
     let exercise: ExerciseDataModel
     let onAnswer: (Bool) -> Void
 
-    var body: some View {
-        VStack {
-            Text("Exercice de complétion")
-                .font(.title)
+    @State private var userInput: String = ""
+    @State private var isAnswered = false
+    @State private var isCorrect: Bool? = nil
 
-            Text("À implémenter")
-                .foregroundColor(.secondary)
+    var body: some View {
+        VStack(spacing: 24) {
+            // Enoncé
+            VStack(spacing: 12) {
+                Text("Complète par la bonne conjugaison :")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                    .multilineTextAlignment(.center)
+
+                // Indication du verbe à conjuguer
+                HStack(spacing: 8) {
+                    Text("Verbe à conjuguer :")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text(exercise.verb)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.12))
+                        .foregroundColor(.blue)
+                        .cornerRadius(8)
+                        .accessibilityLabel("Verbe à conjuguer \(exercise.verb)")
+                }
+
+                Text(exercise.sentence)
+                    .font(.title3)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(10)
+            }
+
+            // Saisie
+            VStack(alignment: .leading, spacing: 12) {
+                TextField("Ta réponse", text: $userInput)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled(true)
+                    .keyboardType(.default)
+                    .padding()
+                    .background(Color.gray.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(borderColor, lineWidth: 2)
+                    )
+                    .cornerRadius(10)
+                    .disabled(isAnswered) // verrouiller après validation
+
+                // Feedback
+                if let isCorrect = isCorrect {
+                    HStack(spacing: 8) {
+                        Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                            .foregroundColor(isCorrect ? .green : .red)
+                        if isCorrect {
+                            Text("Bonne réponse !")
+                                .foregroundColor(.green)
+                                .font(.headline)
+                        } else {
+                            Text("Réponse attendue : \(exercise.correctAnswer)")
+                                .foregroundColor(.red)
+                                .font(.headline)
+                        }
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            Button(action: primaryAction) {
+                Text(buttonTitle)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(Color.blue)
+                    .cornerRadius(10)
+            }
+
         }
+        .padding()
+        .onAppear(perform: reset)
+        .onChange(of: exercise.id) { _ in reset() }
+    }
+
+    private var borderColor: Color {
+        guard let isCorrect = isCorrect else { return .clear }
+        return isCorrect ? .green : .red
+    }
+
+    private func normalize(_ s: String) -> String {
+        let lowered = s.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        // Supprimer les accents
+        let decomposed = lowered.applyingTransform(.stripDiacritics, reverse: false) ?? lowered
+        // Condenser espaces internes
+        let condensed = decomposed.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+        return condensed
+    }
+
+    private func validate() {
+        let expected = normalize(exercise.correctAnswer)
+        let actual = normalize(userInput)
+        isCorrect = (expected == actual)
+        isAnswered = true
+    }
+
+    private func primaryAction() {
+        // 1) Si pas encore validé, on valide (affiche le feedback)
+        if !isAnswered {
+            validate()
+            return
+        }
+        // 2) Si déjà validé, on avance (compte uniquement si correct)
+        onAnswer(isCorrect ?? false)
+    }
+
+    private var buttonTitle: String {
+        if !isAnswered { return "Valider" }
+        return "Exercice suivant"
+    }
+
+    private func reset() {
+        userInput = ""
+        isAnswered = false
+        isCorrect = nil
     }
 }
 
