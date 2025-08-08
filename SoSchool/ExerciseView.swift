@@ -230,85 +230,82 @@ struct QCMExerciseView: View {
     @State private var isAnswered = false
 
     var body: some View {
-        VStack(spacing: 30) {
-            // Question
-            VStack(spacing: 20) {
-                Text("Complète la phrase :")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+        ScrollView {
+            VStack(spacing: 30) {
+                // Question
+                VStack(spacing: 20) {
+                    Text("Complète la phrase :")
+                        .font(.title2)
+                        .fontWeight(.semibold)
 
-                Text(exercise.sentence)
-                    .font(.title3)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(10)
-            }
-
-            // Options de réponse
-            VStack(spacing: 15) {
-                ForEach(exercise.options, id: \.self) { option in
-                    Button(action: {
-                        guard !isAnswered else { return }
-
-                        selectedAnswer = option
-                        isAnswered = true
-                        showFeedback = true
-
-                        // Ne pas appeler onAnswer ici, attendre le bouton "Exercice suivant"
-                    }) {
-                        Text(option)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(selectedAnswer == option ? .white : .primary)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .padding()
-                            .background(backgroundColor(for: option))
-                            .cornerRadius(10)
-                    }
-                    .disabled(isAnswered)
+                    // Encart de phrase: 2 lignes max, taille fixe, troncature
+                    Text(exercise.sentence)
+                        .font(.title3)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .truncationMode(.tail)
+                        .padding()
+                        .frame(maxWidth: .infinity, minHeight: 60, alignment: .center)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(10)
+                        .accessibilityLabel("Phrase à compléter")
                 }
-            }
-            .padding(.horizontal)
 
-            // Zone de feedback simplifiée
-            VStack(spacing: 15) {
-                if showFeedback {
-                    // Bouton suivant seulement
-                    Button(action: {
-                        // Passer à l'exercice suivant avec la réponse actuelle
-                        let wasCorrect = selectedAnswer == exercise.correctAnswer
+                // Options de réponse
+                VStack(spacing: 15) {
+                    ForEach(exercise.options, id: \.self) { option in
+                        Button(action: {
+                            guard !isAnswered else { return }
 
-                        // Réinitialiser l'état pour le prochain exercice
-                        selectedAnswer = nil
-                        showFeedback = false
-                        isAnswered = false
-
-                        // Passer à l'exercice suivant
-                        onAnswer(wasCorrect)
-                    }) {
-                        Text("Exercice suivant")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, minHeight: 50)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(10)
+                            selectedAnswer = option
+                            isAnswered = true
+                            showFeedback = true
+                        }) {
+                            Text(option)
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                                .foregroundColor(selectedAnswer == option ? .white : .primary)
+                                .frame(maxWidth: .infinity, minHeight: 50)
+                                .padding()
+                                .background(backgroundColor(for: option))
+                                .cornerRadius(10)
+                        }
+                        .disabled(isAnswered)
                     }
-                    .padding(.top, 10)
-                } else {
-                    // Espace réservé pour maintenir la hauteur
-                    Spacer()
-                        .frame(height: 60)
                 }
+                .padding(.horizontal)
+
+                // Zone de feedback
+                VStack(spacing: 15) {
+                    if showFeedback {
+                        Button(action: {
+                            let wasCorrect = selectedAnswer == exercise.correctAnswer
+                            selectedAnswer = nil
+                            showFeedback = false
+                            isAnswered = false
+                            onAnswer(wasCorrect)
+                        }) {
+                            Text("Exercice suivant")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity, minHeight: 50)
+                                .padding()
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 10)
+                    } else {
+                        Spacer().frame(height: 60)
+                    }
+                }
+                .frame(minHeight: 80)
             }
-            .frame(minHeight: 80) // Hauteur minimale fixe réduite
+            .padding()
+            .padding(.bottom, 20)
         }
-        .padding()
-        .padding(.bottom, 20) // Ajouter plus d'espace en bas
+        .scrollIndicators(.hidden)
         .onAppear {
-            // Réinitialiser l'état à chaque nouvel exercice
             selectedAnswer = nil
             showFeedback = false
             isAnswered = false
@@ -316,17 +313,10 @@ struct QCMExerciseView: View {
     }
 
     private func backgroundColor(for option: String) -> Color {
-        guard isAnswered else {
-            return Color.gray.opacity(0.1)
-        }
-
-        if option == selectedAnswer {
-            return option == exercise.correctAnswer ? .green : .red
-        } else if option == exercise.correctAnswer {
-            return .green.opacity(0.3)
-        } else {
-            return Color.gray.opacity(0.1)
-        }
+        guard isAnswered else { return Color.gray.opacity(0.1) }
+        if option == selectedAnswer { return option == exercise.correctAnswer ? .green : .red }
+        if option == exercise.correctAnswer { return .green.opacity(0.3) }
+        return Color.gray.opacity(0.1)
     }
 }
 
